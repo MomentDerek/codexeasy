@@ -38,15 +38,15 @@ Use this guide to retarget the template for your application now that the automa
 
 ## 5) Security and signing
 
-- Generate a Tauri updater keypair if you plan to ship updates: `npm run tauri signer generate` (or the equivalent via `cargo tauri signer`).
+- Generate a Tauri updater keypair if you plan to ship updates: `bunx tauri signer generate` (or the equivalent via `cargo tauri signer`).
 - Add the **public key** to `src-tauri/tauri.conf.json`.
 - Store the **private key** and **password** as GitHub Actions secrets (`TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`).
 
 ## 6) Quality checks
 
-- Install dependencies: `npm install` (if not already installed).
-- Run the full suite before your first release: `npm run check:all`.
-- For iterative changes, run the most relevant subset (e.g., `npm run lint`, `npm run typecheck`, `npm run test:run`, `npm run rust:fmt:check`, `npm run rust:clippy`, `npm run rust:test`).
+- Install dependencies: `bun install` (if not already installed).
+- Run the full suite before your first release: `bun run check:all`.
+- For iterative changes, run the most relevant subset (e.g., `bun run lint`, `bun run typecheck`, `bun run test:run`, `bun run rust:fmt:check`, `bun run rust:clippy`, `bun run rust:test`).
 
 ## 7) Final review
 

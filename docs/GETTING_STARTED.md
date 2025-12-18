@@ -8,7 +8,8 @@ Welcome! This guide will help you quickly set up and start customizing this Taur
 
 Ensure you have the following installed:
 
-- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
+- **Bun** (v1.2 or higher) - [Install here](https://bun.sh/)
+- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/) (used by some scripts)
 - **Rust** (latest stable) - [Install with rustup](https://rustup.rs/)
 - **Platform dependencies**:
   - **macOS**: Xcode Command Line Tools (`xcode-select --install`)
@@ -27,14 +28,14 @@ Ensure you have the following installed:
 2. **Install dependencies**:
 
    ```bash
-   npm install
+   bun install
    ```
 
 3. **Start development**:
 
    ```bash
-   npm run dev        # React dev server only
-   npm run tauri:dev  # Full Tauri app (recommended)
+   bun run dev        # React dev server only
+   bun run tauri:dev  # Full Tauri app (recommended)
    ```
 
 4. **Verify everything works**:
@@ -149,13 +150,13 @@ export const projectCommands = [
 
 ```bash
 # Run all quality checks (recommended before commits)
-npm run check:all
+bun run check:all
 
 # Individual checks
-npm run typecheck    # TypeScript checking
-npm run lint         # ESLint
-npm run test:run     # Run tests
-npm run rust:clippy  # Rust linting
+bun run typecheck    # TypeScript checking
+bun run lint         # ESLint
+bun run test:run     # Run tests
+bun run rust:clippy  # Rust linting
 ```
 
 ### Project Structure
@@ -229,7 +230,7 @@ You can create an app icon based on [this Figma Template](https://www.figma.com/
 - **React DevTools**: Install browser extension for React debugging
 - **Tauri DevTools**: Built-in debugging tools (⌘+Shift+I)
 - **Rust Logs**: Check console for Rust backend logs
-- **Hot Reload Issues**: Restart `npm run tauri:dev`
+- **Hot Reload Issues**: Restart `bun run tauri:dev`
 
 ---
 
