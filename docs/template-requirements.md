@@ -292,6 +292,8 @@ The philosophy, design patterns, architecture, best practises, and development p
 
 `docs/architecture-guide.md` is a comprihensive set of instructions on the patterns and rules used in this app. It's intended for AI agents to read when checking their work follows established patterns.
 
+`docs/developer/project-initialization.md` documents how to retarget the template (naming, identifiers, updater URLs, and signing keys) now that automation commands are removed.
+
 ## User Guide Boilerplate
 
 A Bare Bones User Guide is included in `docs/userguide`. As new user-facing features are added, this user guide should be updated. The Markdown files in here can be used to build an online user guide if needed.
