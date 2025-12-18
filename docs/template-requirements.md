@@ -13,7 +13,7 @@ This setup is designed to be highly effective for human developers and AI coding
 - State: Tanstack Query & Zustand 5
 - Tests: Built-in for Rust & Vitest 3 for TS
 - CI & Releases: GitHub Actions + GitHub
-- DX: VSCode/Cursor, Claude Code
+- DX: VSCode/Cursor with Codex instructions (see AGENTS.md)
 
 # The Walking Skeleton
 
@@ -22,7 +22,7 @@ This setup is designed to be highly effective for human developers and AI coding
 - Clean Tauri + React App
 - Tauri plugins for with clipboard and filesystem access.
 - Typechecking, linting and formatting via Typescript, ESLint, Prettier, Cargo and Clippy with sensible default configs.
-- A minimal DX setup for VSCode, Cursor, Claude Code and Gemini.
+- A minimal DX setup for VSCode, Cursor, and Codex guidance.
 - Simple bare-bones test framework for Rust (native) and Typescript (vitest)
 - Clear state management "Onion":
   - useState -> Ephemeral internal component UI state
@@ -50,7 +50,7 @@ This setup is designed to be highly effective for human developers and AI coding
 - Developer documentation framework
 - User Manual framework
 - Markdown-based task management system
-- Tailored AI instructions, agents and commands
+- Centralized Codex instructions in AGENTS.md
 
 ## App Boilerplate (Tauri & React)
 
@@ -310,23 +310,7 @@ Tasks take the form `task-x-taskname.md`. To prioritise a task, change the "x" t
 
 ### AI Instructions
 
-A comprehensive `CLAUDE.md` is included, along with barebones cursor rules and `GEMINI.md` which simply point at claude's instructions.
-
-### Claude Code Agents
-
-Five Claude Code agents specific to this project are included:
-
-- UI Designer -> Expert & passionate UI designer with 15 years experience building native-feeling desktop apps using web technology. Knows macOS design inside out and is expert at making Tauri/React apps beatiful and joyful to use. Equally great at tailwind and modern CSS, with a deep understanding of how React components should be composed to create beautiful, accessible and delightful UIs. Always sweats the details.
-- Tauri Genius -> World expert on the inner workings of Tauri and it's plugin ecosystem and highly skilled Rust engineer. Knows the JS/TS parts of Tauri as well as the rust parts.
-- React Genius -> World Expert at writing clean, performant and maintainable front-end systems with _exactly our stack_.
-- Technical writer -> Expert at writing clear, terse, unambiguous and information-dense technical docs about THIS PROJECT which are INCREDIBLE at helping both human and AI coders **really understand** the mental models and patterns required to work easily in this codebase. They know the codebase inside-out but only document the stuff their readers **need**. Their docs are so good at explaining the patterns, mental models and Weird Bits that people new to the project always say "it normally takes months of mistakes before I really get a codebase. These docs made that instant". Owns everything in `/docs/developer` and contributes to other technical docs as needed.
-- User Guide Writer -> Thirty years experience writing AMAZING guides for end users of technical software. The hardest part of this job is balancing "compelling", "complete", "correct", "engaging", "concise" and "clear". And this agent is KNOWN for being great at that. They know the product and it's users inside-out. When a diagram, screenshot or video is better than words, they ask a human for help... clearly explaining what they need. They are responsible for `docs/userguide` and nothing else.
-
-### Claude Code Commands
-
-One Claude Code Command is included. You should create moreas your product evolves.
-
-- `/check` -> Checks everything meets `docs/architecture-guide.css` , runs `npm run check:all` and fixes any problems.
+Codex-focused instructions live in `AGENTS.md`. Keep that file updated with any repository-specific guidance needed for automation, and avoid adding per-tool instruction files elsewhere in the tree.
 
 ## Other Boilerplate Bits
 
@@ -335,7 +319,7 @@ Eg...
 - .gitignore
 - .prettierignore
 - .cursorignore
-- CLAUDE.local.md # Ignored by git. Use to set current task and any temporary memories.
+- AGENTS.md with Codex instructions
 - LICENSE.md
 - README.md
 - docs/SECURITY.md
