@@ -42,6 +42,10 @@ Ensure you have the following installed:
    - Try the command palette (⌘+K or Ctrl+K)
    - Test the preferences dialog (⌘+, or Ctrl+,)
 
+### Retarget the template
+
+When you're ready to brand the project for your own app, follow the manual checklist in [docs/developer/project-initialization.md](developer/project-initialization.md) to update names, identifiers, and release settings across the stack.
+
 ## Key Features Overview
 
 ### 🎯 Command System

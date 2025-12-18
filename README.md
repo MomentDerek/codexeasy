@@ -49,6 +49,7 @@ const handleAction = useCallback(() => {
 
 - **[User Guide](docs/userguide/userguide.md)** - End-user documentation
 - **[Developer Docs](docs/developer/)** - Architecture, patterns, and guides
+- **[Project Initialization](docs/developer/project-initialization.md)** - Manual steps to retarget the template to your app
 - **[Testing Guide](docs/developer/testing.md)** - Testing strategies and utilities
 - **[Agent Instructions](AGENTS.md)** - Codex-specific guidance for working in this repo
 
