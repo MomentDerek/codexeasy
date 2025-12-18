@@ -42,24 +42,6 @@ Ensure you have the following installed:
    - Try the command palette (⌘+K or Ctrl+K)
    - Test the preferences dialog (⌘+, or Ctrl+,)
 
-### 🚀 Quick Template Setup (Claude Code Users)
-
-If you're using **Claude Code**, you can use the `/init` command to automatically configure the template for your specific application:
-
-```
-/init
-```
-
-This will:
-
-- Prompt you for your app name and description
-- Update all configuration files with your app details
-- Set up proper identifiers and metadata
-- Configure GitHub workflows and release settings
-- Run quality checks to ensure everything works
-
-**This saves significant setup time and ensures consistency across all files!**
-
 ## Key Features Overview
 
 ### 🎯 Command System

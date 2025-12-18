@@ -11,7 +11,7 @@ A production-ready template for building modern desktop applications with Tauri 
 - **Quality Tools**: ESLint + Prettier + Rust clippy + comprehensive CI
 - **Native Integration**: Menu system + keyboard shortcuts + notifications + auto-updater
 - **Documentation**: Comprehensive developer and user guides
-- **AI-Ready**: Claude Code agents and documentation structure
+- **AI Guidance**: Codex-oriented instructions centralized in `AGENTS.md`
 
 ## 🛠 Architecture
 
@@ -50,7 +50,7 @@ const handleAction = useCallback(() => {
 - **[User Guide](docs/userguide/userguide.md)** - End-user documentation
 - **[Developer Docs](docs/developer/)** - Architecture, patterns, and guides
 - **[Testing Guide](docs/developer/testing.md)** - Testing strategies and utilities
-- **[Claude Agents](.claude/agents/)** - AI development assistants
+- **[Agent Instructions](AGENTS.md)** - Codex-specific guidance for working in this repo
 
 ## 🏗 Quick Start
 
@@ -90,7 +90,7 @@ npm run build
 ├── docs/                  # Documentation
 │   ├── developer/         # Developer guides
 │   └── userguide/         # User documentation
-└── .claude/agents/        # AI development assistants
+├── AGENTS.md              # Codex instructions for this repository
 ```
 
 ## 🧪 Quality Assurance
@@ -202,4 +202,4 @@ For security concerns, please see [SECURITY.md](docs/SECURITY.md).
 ## Recommended IDE Setup
 
 - [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
-- [Cursor](https://cursor.sh/) with the included `.claude/agents/` for AI-assisted development
+- [Cursor](https://cursor.sh/) paired with the repository `AGENTS.md` for AI-assisted development
