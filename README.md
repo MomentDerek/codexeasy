@@ -57,7 +57,8 @@ const handleAction = useCallback(() => {
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18+)
+- [Bun](https://bun.sh/) (v1.2+)
+- [Node.js](https://nodejs.org/) (v18+) for compatibility scripts
 - [Rust](https://rustup.rs/) (latest stable)
 - Platform-specific dependencies (see [Tauri Prerequisites](https://tauri.app/start/prerequisites/))
 
@@ -67,16 +68,16 @@ const handleAction = useCallback(() => {
 # Clone and install
 git clone <your-repo>
 cd tauri-template
-npm install
+bun install
 
 # Start development server
-npm run dev
+bun run dev
 
 # Run tests and quality checks
-npm run check:all
+bun run check:all
 
 # Build for production
-npm run build
+bun run build
 ```
 
 ### Project Structure
@@ -99,7 +100,7 @@ npm run build
 This template includes comprehensive quality gates:
 
 ```bash
-npm run check:all  # Runs all checks below:
+bun run check:all  # Runs all checks below:
 ```
 
 - ✅ TypeScript type checking
@@ -170,7 +171,7 @@ Before deploying your application to production, ensure you complete these criti
 
 ### Quality Assurance
 
-- [ ] **Run full test suite** - `npm run check:all` must pass
+- [ ] **Run full test suite** - `bun run check:all` must pass
 - [ ] **Test on all target platforms** - macOS, Windows, Linux as needed
 - [ ] **Verify auto-updater flow** - Test with signed releases
 - [ ] **Performance testing** - Ensure app performs well with real data
