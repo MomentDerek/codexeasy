@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Settings, Palette, Zap } from 'lucide-react'
+import { Settings, Palette, Zap, Terminal } from 'lucide-react'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -28,8 +28,9 @@ import { useUIStore } from '@/store/ui-store'
 import { GeneralPane } from './panes/GeneralPane'
 import { AppearancePane } from './panes/AppearancePane'
 import { AdvancedPane } from './panes/AdvancedPane'
+import { CodexPane } from './panes/CodexPane'
 
-type PreferencePane = 'general' | 'appearance' | 'advanced'
+type PreferencePane = 'general' | 'appearance' | 'advanced' | 'codex'
 
 const navigationItems = [
   {
@@ -47,6 +48,11 @@ const navigationItems = [
     name: 'Advanced',
     icon: Zap,
   },
+  {
+    id: 'codex' as const,
+    name: 'Codex',
+    icon: Terminal,
+  },
 ]
 
 const getPaneTitle = (pane: PreferencePane): string => {
@@ -57,6 +63,8 @@ const getPaneTitle = (pane: PreferencePane): string => {
       return 'Appearance'
     case 'advanced':
       return 'Advanced'
+    case 'codex':
+      return 'Codex'
     default:
       return 'General'
   }
@@ -125,6 +133,7 @@ export function PreferencesDialog() {
               {activePane === 'general' && <GeneralPane />}
               {activePane === 'appearance' && <AppearancePane />}
               {activePane === 'advanced' && <AdvancedPane />}
+              {activePane === 'codex' && <CodexPane />}
             </div>
           </main>
         </SidebarProvider>

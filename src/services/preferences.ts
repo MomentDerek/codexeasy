@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { invoke } from '@tauri-apps/api/core'
 import { toast } from 'sonner'
 import { logger } from '@/lib/logger'
-import type { AppPreferences } from '@/types/preferences'
+import { defaultPreferences, type AppPreferences } from '@/types/preferences'
 
 // Query keys for preferences
 export const preferencesQueryKeys = {
@@ -18,12 +18,20 @@ export function usePreferences() {
       try {
         logger.debug('Loading preferences from backend')
         const preferences = await invoke<AppPreferences>('load_preferences')
+        const mergedPreferences: AppPreferences = {
+          ...defaultPreferences,
+          ...preferences,
+          codex: {
+            ...defaultPreferences.codex,
+            ...preferences.codex,
+          },
+        }
         logger.info('Preferences loaded successfully', { preferences })
-        return preferences
+        return mergedPreferences
       } catch (error) {
         // Return defaults if preferences file doesn't exist yet
         logger.warn('Failed to load preferences, using defaults', { error })
-        return { theme: 'system' }
+        return defaultPreferences
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -37,8 +45,17 @@ export function useSavePreferences() {
   return useMutation({
     mutationFn: async (preferences: AppPreferences) => {
       try {
-        logger.debug('Saving preferences to backend', { preferences })
-        await invoke('save_preferences', { preferences })
+        const payload: AppPreferences = {
+          ...defaultPreferences,
+          ...preferences,
+          codex: {
+            ...defaultPreferences.codex,
+            ...preferences.codex,
+          },
+        }
+
+        logger.debug('Saving preferences to backend', { preferences: payload })
+        await invoke('save_preferences', { preferences: payload })
         logger.info('Preferences saved successfully')
       } catch (error) {
         const message =
@@ -49,8 +66,20 @@ export function useSavePreferences() {
       }
     },
     onSuccess: (_, preferences) => {
+      const nextPreferences: AppPreferences = {
+        ...defaultPreferences,
+        ...preferences,
+        codex: {
+          ...defaultPreferences.codex,
+          ...preferences.codex,
+        },
+      }
+
       // Update the cache with the new preferences
-      queryClient.setQueryData(preferencesQueryKeys.preferences(), preferences)
+      queryClient.setQueryData(
+        preferencesQueryKeys.preferences(),
+        nextPreferences
+      )
       logger.info('Preferences cache updated')
       toast.success('Preferences saved')
     },

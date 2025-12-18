@@ -2,12 +2,22 @@
 // Only contains settings that should be persisted to disk
 export interface AppPreferences {
   theme: string
-  // Add new persistent preferences here, e.g.:
-  // auto_save: boolean
-  // language: string
+  codex: CodexPreferences
+}
+
+export interface CodexPreferences {
+  codexPath: string
+  workingDirectory?: string
+  host: string
+  port: number
 }
 
 export const defaultPreferences: AppPreferences = {
   theme: 'system',
-  // Add defaults for new preferences here
+  codex: {
+    codexPath: '',
+    workingDirectory: '',
+    host: '127.0.0.1',
+    port: 3928,
+  },
 }

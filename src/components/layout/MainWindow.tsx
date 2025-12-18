@@ -9,6 +9,11 @@ import { RightSideBar } from './RightSideBar'
 import { MainWindowContent } from './MainWindowContent'
 import { CommandPalette } from '@/components/command-palette/CommandPalette'
 import { PreferencesDialog } from '@/components/preferences/PreferencesDialog'
+import {
+  CodexNavigationSidebar,
+  CodexInsightsSidebar,
+  CodexWorkspace,
+} from '@/components/codex'
 import { Toaster } from 'sonner'
 import { useTheme } from '@/hooks/use-theme'
 import { useUIStore } from '@/store/ui-store'
@@ -37,14 +42,18 @@ export function MainWindow() {
             maxSize={40}
             className={cn(!leftSidebarVisible && 'hidden')}
           >
-            <LeftSideBar />
+            <LeftSideBar>
+              <CodexNavigationSidebar />
+            </LeftSideBar>
           </ResizablePanel>
 
           <ResizableHandle className={cn(!leftSidebarVisible && 'hidden')} />
 
           {/* Main Content */}
           <ResizablePanel defaultSize={60} minSize={30}>
-            <MainWindowContent />
+            <MainWindowContent>
+              <CodexWorkspace />
+            </MainWindowContent>
           </ResizablePanel>
 
           <ResizableHandle className={cn(!rightSidebarVisible && 'hidden')} />
@@ -56,7 +65,9 @@ export function MainWindow() {
             maxSize={40}
             className={cn(!rightSidebarVisible && 'hidden')}
           >
-            <RightSideBar />
+            <RightSideBar>
+              <CodexInsightsSidebar />
+            </RightSideBar>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

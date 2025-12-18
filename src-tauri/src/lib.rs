@@ -2,9 +2,11 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::process::{Command, CommandChild, CommandEvent};
+use tauri::{async_runtime::Mutex, AppHandle, Emitter, Manager, State};
 
 // Validation functions
 fn validate_filename(filename: &str) -> Result<(), String> {
@@ -44,6 +46,27 @@ fn validate_theme(theme: &str) -> Result<(), String> {
     }
 }
 
+fn validate_codex_preferences(preferences: &CodexPreferences) -> Result<(), String> {
+    validate_string_input(&preferences.host, 255, "Host")?;
+
+    if preferences.port == 0 {
+        return Err("Invalid port: must be between 1 and 65535".to_string());
+    }
+
+    if preferences.codex_path.len() > 512 {
+        return Err("Codex path too long (max 512 characters)".to_string());
+    }
+
+    if !preferences.codex_path.is_empty() && !PathBuf::from(&preferences.codex_path).exists() {
+        return Err(format!(
+            "Codex binary not found at: {}",
+            preferences.codex_path
+        ));
+    }
+
+    Ok(())
+}
+
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -60,20 +83,85 @@ fn greet(name: &str) -> String {
 // Preferences data structure
 // Only contains settings that should be persisted to disk
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AppPreferences {
     pub theme: String,
-    // Add new persistent preferences here, e.g.:
-    // pub auto_save: bool,
-    // pub language: String,
+    #[serde(default)]
+    pub codex: CodexPreferences,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodexPreferences {
+    #[serde(default)]
+    pub codex_path: String,
+    #[serde(default)]
+    pub working_directory: Option<String>,
+    #[serde(default = "default_host")]
+    pub host: String,
+    #[serde(default = "default_port")]
+    pub port: u16,
 }
 
 impl Default for AppPreferences {
     fn default() -> Self {
         Self {
             theme: "system".to_string(),
-            // Add defaults for new preferences here
+            codex: CodexPreferences::default(),
         }
     }
+}
+
+impl Default for CodexPreferences {
+    fn default() -> Self {
+        Self {
+            codex_path: String::new(),
+            working_directory: None,
+            host: default_host(),
+            port: default_port(),
+        }
+    }
+}
+
+fn default_host() -> String {
+    "127.0.0.1".to_string()
+}
+
+fn default_port() -> u16 {
+    3928
+}
+
+fn current_time_millis() -> Option<u128> {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .ok()
+        .map(|duration| duration.as_millis())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct CodexServerStatus {
+    pub running: bool,
+    pub pid: Option<u32>,
+    pub host: Option<String>,
+    pub port: Option<u16>,
+    pub started_at_ms: Option<u128>,
+    pub last_message: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodexLaunchOptions {
+    pub codex_path: String,
+    pub working_directory: Option<String>,
+    pub host: Option<String>,
+    pub port: Option<u16>,
+}
+
+#[derive(Default)]
+pub struct CodexServerState {
+    pub child: Arc<Mutex<Option<CommandChild>>>,
+    pub status: Arc<Mutex<CodexServerStatus>>,
 }
 
 fn get_preferences_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -109,14 +197,31 @@ async fn load_preferences(app: AppHandle) -> Result<AppPreferences, String> {
         format!("Failed to parse preferences: {e}")
     })?;
 
+    // Ensure defaults are set for nested preferences
+    let mut preferences = preferences;
+    if preferences.codex.host.is_empty() {
+        preferences.codex.host = default_host();
+    }
+    if preferences.codex.port == 0 {
+        preferences.codex.port = default_port();
+    }
+
     log::info!("Successfully loaded preferences");
     Ok(preferences)
 }
 
 #[tauri::command]
-async fn save_preferences(app: AppHandle, preferences: AppPreferences) -> Result<(), String> {
+async fn save_preferences(app: AppHandle, mut preferences: AppPreferences) -> Result<(), String> {
     // Validate theme value
     validate_theme(&preferences.theme)?;
+    validate_codex_preferences(&preferences.codex)?;
+
+    if preferences.codex.host.is_empty() {
+        preferences.codex.host = default_host();
+    }
+    if preferences.codex.port == 0 {
+        preferences.codex.port = default_port();
+    }
 
     log::debug!("Saving preferences to disk: {preferences:?}");
     let prefs_path = get_preferences_path(&app)?;
@@ -178,6 +283,131 @@ async fn send_native_notification(
         log::warn!("Native notifications not supported on mobile");
         Err("Native notifications not supported on mobile".to_string())
     }
+}
+
+#[tauri::command]
+async fn start_codex_app_server(
+    state: State<'_, CodexServerState>,
+    options: CodexLaunchOptions,
+) -> Result<CodexServerStatus, String> {
+    log::info!("Starting Codex app server with {:?}", options);
+
+    let host = options
+        .host
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(default_host);
+    let port = options
+        .port
+        .filter(|value| *value > 0)
+        .unwrap_or_else(default_port);
+
+    let preferences = CodexPreferences {
+        codex_path: options.codex_path.clone(),
+        working_directory: options.working_directory.clone(),
+        host: host.clone(),
+        port,
+    };
+
+    validate_codex_preferences(&preferences)?;
+
+    let mut child_guard = state.child.lock().await;
+    if child_guard.is_some() {
+        return Err("Codex app server is already running".to_string());
+    }
+
+    let mut command = Command::new(&preferences.codex_path);
+    command.arg("app-server");
+    command.arg("--host");
+    command.arg(&preferences.host);
+    command.arg("--port");
+    command.arg(preferences.port.to_string());
+
+    if let Some(working_directory) = &preferences.working_directory {
+        if !working_directory.trim().is_empty() {
+            command.current_dir(working_directory);
+        }
+    }
+
+    let (mut rx, child) = command
+        .spawn()
+        .map_err(|e| format!("Failed to start Codex app server: {e}"))?;
+
+    let pid = child.pid();
+    *child_guard = Some(child);
+    drop(child_guard);
+
+    let mut status_guard = state.status.lock().await;
+    *status_guard = CodexServerStatus {
+        running: true,
+        pid,
+        host: Some(host.clone()),
+        port: Some(port),
+        started_at_ms: current_time_millis(),
+        last_message: None,
+    };
+    drop(status_guard);
+
+    let status_handle = state.status.clone();
+    let child_handle = state.child.clone();
+    tauri::async_runtime::spawn(async move {
+        while let Some(event) = rx.recv().await {
+            match event {
+                CommandEvent::Stdout(line) => {
+                    log::info!("Codex app server: {line}");
+                    let mut guard = status_handle.lock().await;
+                    guard.last_message = Some(line);
+                }
+                CommandEvent::Stderr(line) => {
+                    log::warn!("Codex app server stderr: {line}");
+                    let mut guard = status_handle.lock().await;
+                    guard.last_message = Some(line);
+                }
+                CommandEvent::Terminated(payload) => {
+                    log::warn!("Codex app server terminated: {payload:?}");
+                    let mut guard = status_handle.lock().await;
+                    guard.running = false;
+                    guard.pid = None;
+                    guard.last_message = Some("Codex app server terminated".to_string());
+                    drop(guard);
+
+                    let mut child_guard = child_handle.lock().await;
+                    *child_guard = None;
+                    break;
+                }
+                _ => {}
+            }
+        }
+    });
+
+    let status = state.status.lock().await.clone();
+    Ok(status)
+}
+
+#[tauri::command]
+async fn stop_codex_app_server(
+    state: State<'_, CodexServerState>,
+) -> Result<CodexServerStatus, String> {
+    log::info!("Stopping Codex app server");
+    let mut child_guard = state.child.lock().await;
+
+    if let Some(mut child) = child_guard.take() {
+        child
+            .kill()
+            .map_err(|e| format!("Failed to stop Codex app server: {e}"))?;
+    }
+    drop(child_guard);
+
+    let mut status_guard = state.status.lock().await;
+    *status_guard = CodexServerStatus::default();
+    Ok(status_guard.clone())
+}
+
+#[tauri::command]
+async fn get_codex_server_status(
+    state: State<'_, CodexServerState>,
+) -> Result<CodexServerStatus, String> {
+    let status = state.status.lock().await.clone();
+    Ok(status)
 }
 
 // Recovery functions - simple pattern for saving JSON data to disk
@@ -426,6 +656,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
+        .manage(CodexServerState::default())
         .setup(|app| {
             log::info!("🚀 Application starting up");
             log::debug!(
@@ -512,6 +743,9 @@ pub fn run() {
             load_preferences,
             save_preferences,
             send_native_notification,
+            start_codex_app_server,
+            stop_codex_app_server,
+            get_codex_server_status,
             save_emergency_data,
             load_emergency_data,
             cleanup_old_recovery_files
