@@ -8,8 +8,11 @@ import './App.css'
 import MainWindow from './components/layout/MainWindow'
 import { ThemeProvider } from './components/ThemeProvider'
 import ErrorBoundary from './components/ErrorBoundary'
+import { useCodexBridge } from './hooks/useCodexBridge'
 
 function App() {
+  useCodexBridge()
+
   // Initialize command system and cleanup on app startup
   useEffect(() => {
     logger.info('🚀 Frontend application starting up')

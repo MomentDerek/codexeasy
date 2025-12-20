@@ -1,8 +1,9 @@
 {
-  "name": "tauri-app",
+  "name": "codexeasy",
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "description": "Desktop GUI for codex app-server, built with Tauri + React",
   "author": "Danny Smith",
   "copyright": "Copyright © 2025 Danny Smith. All rights reserved.",
   "license": "MIT",

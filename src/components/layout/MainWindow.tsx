@@ -14,6 +14,8 @@ import { useTheme } from '@/hooks/use-theme'
 import { useUIStore } from '@/store/ui-store'
 import { useMainWindowEventListeners } from '@/hooks/useMainWindowEventListeners'
 import { cn } from '@/lib/utils'
+import { CodexSidebar } from '../codex/CodexSidebar'
+import { CodexLogPanel } from '../codex/CodexLogPanel'
 
 export function MainWindow() {
   const { theme } = useTheme()
@@ -37,7 +39,9 @@ export function MainWindow() {
             maxSize={40}
             className={cn(!leftSidebarVisible && 'hidden')}
           >
-            <LeftSideBar />
+            <LeftSideBar>
+              <CodexSidebar />
+            </LeftSideBar>
           </ResizablePanel>
 
           <ResizableHandle className={cn(!leftSidebarVisible && 'hidden')} />
@@ -56,7 +60,9 @@ export function MainWindow() {
             maxSize={40}
             className={cn(!rightSidebarVisible && 'hidden')}
           >
-            <RightSideBar />
+            <RightSideBar>
+              <CodexLogPanel title="Recent events" limit={30} condensed />
+            </RightSideBar>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

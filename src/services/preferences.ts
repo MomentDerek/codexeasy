@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { toast } from 'sonner'
 import { logger } from '@/lib/logger'
 import type { AppPreferences } from '@/types/preferences'
+import { defaultPreferences } from '@/types/preferences'
 
 // Query keys for preferences
 export const preferencesQueryKeys = {
@@ -18,12 +19,13 @@ export function usePreferences() {
       try {
         logger.debug('Loading preferences from backend')
         const preferences = await invoke<AppPreferences>('load_preferences')
+        const mergedPreferences = { ...defaultPreferences, ...preferences }
         logger.info('Preferences loaded successfully', { preferences })
-        return preferences
+        return mergedPreferences
       } catch (error) {
         // Return defaults if preferences file doesn't exist yet
         logger.warn('Failed to load preferences, using defaults', { error })
-        return { theme: 'system' }
+        return defaultPreferences
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
