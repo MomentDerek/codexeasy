@@ -1,17 +1,16 @@
-# Tauri React Template
+# Codex Easy
 
-A production-ready template for building modern desktop applications with Tauri v2, React 19, and TypeScript. This template provides a solid foundation with best practices, comprehensive documentation, and quality tooling built-in.
+A desktop GUI for the codex CLI app-server. Codex Easy wraps `codex app-server` inside a managed Tauri shell, streams JSON-RPC traffic to the React UI, and gives you a playground to start threads, turns, and diagnostics without leaving the desktop.
 
 ## 🚀 Features
 
-- **Modern Stack**: Tauri v2 + React 19 + TypeScript + Vite
-- **UI Components**: shadcn/ui v4 + Tailwind CSS v4 + Lucide React
+- **codex app-server bridge**: spawn and monitor `codex app-server` directly from the GUI, with initialize → initialized handshake handled for you.
+- **JSON-RPC playground**: craft raw requests (e.g., `model/list`, `thread/start`) and inspect live responses and notifications.
+- **Configurable CLI paths**: persist the codex binary path and workspace directory in Preferences, ready for every launch.
+- **Modern Stack**: Tauri v2 + React 19 + TypeScript + Vite + shadcn/ui v4
 - **State Management**: Zustand v5 + TanStack Query v5
-- **Testing**: Vitest v3 + Testing Library
-- **Quality Tools**: ESLint + Prettier + Rust clippy + comprehensive CI
-- **Native Integration**: Menu system + keyboard shortcuts + notifications + auto-updater
-- **Documentation**: Comprehensive developer and user guides
-- **AI Guidance**: Codex-oriented instructions centralized in `AGENTS.md`
+- **Testing**: Vitest v3 + Testing Library + Rust clippy/tests
+- **Quality Tools**: ESLint + Prettier + rustfmt + comprehensive CI
 
 ## 🛠 Architecture
 
@@ -49,6 +48,7 @@ const handleAction = useCallback(() => {
 
 - **[User Guide](docs/userguide/userguide.md)** - End-user documentation
 - **[Developer Docs](docs/developer/)** - Architecture, patterns, and guides
+- **[codex app-server Integration](docs/developer/codex-app-server.md)** - Bridge design and lifecycle
 - **[Project Initialization](docs/developer/project-initialization.md)** - Manual steps to retarget the template to your app
 - **[Testing Guide](docs/developer/testing.md)** - Testing strategies and utilities
 - **[Agent Instructions](AGENTS.md)** - Codex-specific guidance for working in this repo
@@ -67,11 +67,14 @@ const handleAction = useCallback(() => {
 ```bash
 # Clone and install
 git clone <your-repo>
-cd tauri-template
+cd codexeasy
 bun install
 
 # Start development server
 bun run dev
+
+# In the app, set your codex binary path and workspace,
+# then click “Start server” to launch codex app-server
 
 # Run tests and quality checks
 bun run check:all

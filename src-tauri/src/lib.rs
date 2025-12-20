@@ -5,6 +5,8 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
 use tauri::{AppHandle, Emitter, Manager};
+mod codex;
+use codex::{send_app_server_rpc, start_app_server, stop_app_server, AppServerState};
 
 // Validation functions
 fn validate_filename(filename: &str) -> Result<(), String> {
@@ -60,8 +62,11 @@ fn greet(name: &str) -> String {
 // Preferences data structure
 // Only contains settings that should be persisted to disk
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct AppPreferences {
     pub theme: String,
+    pub codex_binary_path: String,
+    pub workspace_path: String,
     // Add new persistent preferences here, e.g.:
     // pub auto_save: bool,
     // pub language: String,
@@ -71,6 +76,8 @@ impl Default for AppPreferences {
     fn default() -> Self {
         Self {
             theme: "system".to_string(),
+            codex_binary_path: String::new(),
+            workspace_path: String::new(),
             // Add defaults for new preferences here
         }
     }
@@ -117,6 +124,8 @@ async fn load_preferences(app: AppHandle) -> Result<AppPreferences, String> {
 async fn save_preferences(app: AppHandle, preferences: AppPreferences) -> Result<(), String> {
     // Validate theme value
     validate_theme(&preferences.theme)?;
+    validate_string_input(&preferences.codex_binary_path, 4096, "Codex binary path")?;
+    validate_string_input(&preferences.workspace_path, 4096, "Workspace path")?;
 
     log::debug!("Saving preferences to disk: {preferences:?}");
     let prefs_path = get_preferences_path(&app)?;
@@ -348,8 +357,8 @@ fn create_app_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
     log::info!("Setting up native menu system");
 
     // Build the main application submenu
-    let app_submenu = SubmenuBuilder::new(app, "Tauri Template")
-        .item(&MenuItemBuilder::with_id("about", "About Tauri Template").build(app)?)
+    let app_submenu = SubmenuBuilder::new(app, "Codex Easy")
+        .item(&MenuItemBuilder::with_id("about", "About Codex Easy").build(app)?)
         .separator()
         .item(&MenuItemBuilder::with_id("check-updates", "Check for Updates...").build(app)?)
         .separator()
@@ -359,11 +368,11 @@ fn create_app_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
                 .build(app)?,
         )
         .separator()
-        .item(&PredefinedMenuItem::hide(app, Some("Hide Tauri Template"))?)
+        .item(&PredefinedMenuItem::hide(app, Some("Hide Codex Easy"))?)
         .item(&PredefinedMenuItem::hide_others(app, None)?)
         .item(&PredefinedMenuItem::show_all(app, None)?)
         .separator()
-        .item(&PredefinedMenuItem::quit(app, Some("Quit Tauri Template"))?)
+        .item(&PredefinedMenuItem::quit(app, Some("Quit Codex Easy"))?)
         .build()?;
 
     // Build the View submenu
@@ -396,6 +405,7 @@ fn create_app_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(AppServerState::default())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_notification::init())
@@ -514,7 +524,10 @@ pub fn run() {
             send_native_notification,
             save_emergency_data,
             load_emergency_data,
-            cleanup_old_recovery_files
+            cleanup_old_recovery_files,
+            start_app_server,
+            stop_app_server,
+            send_app_server_rpc
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

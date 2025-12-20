@@ -6,12 +6,15 @@ import App from './App'
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn().mockResolvedValue({ theme: 'system' }),
 }))
+vi.mock('@tauri-apps/api/event', () => ({
+  listen: vi.fn().mockResolvedValue(() => undefined),
+}))
 
 describe('App', () => {
   it('renders main window layout', () => {
     render(<App />)
     expect(
-      screen.getByRole('heading', { name: /hello world/i })
+      screen.getByRole('heading', { name: /codex app-server workspace/i })
     ).toBeInTheDocument()
   })
 

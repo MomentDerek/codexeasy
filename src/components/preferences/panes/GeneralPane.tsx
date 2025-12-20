@@ -1,8 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
-import { Input } from '@/components/ui/input'
+import { usePreferences, useSavePreferences } from '@/services/preferences'
+import { useCodexStore } from '@/store/codex-store'
+import { defaultPreferences } from '@/types/preferences'
 
 const SettingsField: React.FC<{
   label: string
@@ -32,42 +35,67 @@ const SettingsSection: React.FC<{
 )
 
 export const GeneralPane: React.FC = () => {
-  // Example local state - these are NOT persisted to disk
-  // To add persistent preferences:
-  // 1. Add the field to AppPreferences in both Rust and TypeScript
-  // 2. Use usePreferencesManager() and updatePreferences()
-  const [exampleText, setExampleText] = useState('Example value')
-  const [exampleToggle, setExampleToggle] = useState(true)
+  const { data: preferences } = usePreferences()
+  const savePreferences = useSavePreferences()
+  const hydrateFromPreferences = useCodexStore(
+    state => state.hydrateFromPreferences
+  )
+
+  const [binaryPath, setBinaryPath] = useState('')
+  const [workspacePath, setWorkspacePath] = useState('')
+
+  useEffect(() => {
+    if (!preferences) {
+      return
+    }
+
+    hydrateFromPreferences(preferences)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrating form inputs from persisted preferences
+    setBinaryPath(preferences.codexBinaryPath)
+    setWorkspacePath(preferences.workspacePath)
+  }, [preferences, hydrateFromPreferences])
+
+  const handleSave = () => {
+    const existingPreferences = preferences ?? defaultPreferences
+
+    savePreferences.mutate({
+      ...existingPreferences,
+      codexBinaryPath: binaryPath,
+      workspacePath,
+      theme: existingPreferences.theme,
+    })
+  }
 
   return (
     <div className="space-y-6">
-      <SettingsSection title="Example Settings">
+      <SettingsSection title="codex CLI">
         <SettingsField
-          label="Example Text Setting"
-          description="This is an example text input setting (not persisted)"
+          label="codex binary path"
+          description="Path to the codex CLI. This is used to spawn the embedded app-server."
         >
           <Input
-            value={exampleText}
-            onChange={e => setExampleText(e.target.value)}
-            placeholder="Enter example text"
+            placeholder="/usr/local/bin/codex"
+            value={binaryPath}
+            onChange={event => setBinaryPath(event.target.value)}
           />
         </SettingsField>
 
         <SettingsField
-          label="Example Toggle Setting"
-          description="This is an example switch/toggle setting (not persisted)"
+          label="Workspace directory"
+          description="The default cwd passed to codex app-server. You can override it per request from the dashboard."
         >
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="example-toggle"
-              checked={exampleToggle}
-              onCheckedChange={setExampleToggle}
-            />
-            <Label htmlFor="example-toggle" className="text-sm">
-              {exampleToggle ? 'Enabled' : 'Disabled'}
-            </Label>
-          </div>
+          <Input
+            placeholder="~/projects/my-repo"
+            value={workspacePath}
+            onChange={event => setWorkspacePath(event.target.value)}
+          />
         </SettingsField>
+
+        <div className="flex items-center justify-end">
+          <Button onClick={handleSave} disabled={savePreferences.isPending}>
+            Save codex settings
+          </Button>
+        </div>
       </SettingsSection>
     </div>
   )
